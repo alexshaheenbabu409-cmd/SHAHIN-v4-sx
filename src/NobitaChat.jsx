@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, MoreHorizontal, Paperclip, ArrowUp, Sun, Moon, X } from 'lucide-react';
+import { Plus, MoreHorizontal, Paperclip, ArrowUp, Sun, Moon, X, Copy, Check } from 'lucide-react';
 
 const STORAGE_KEY = 'nobita_chat_sessions';
 const THEME_KEY = 'nobita_theme';
@@ -19,7 +19,19 @@ const NobitaChat = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState(null);
   const [attachedFile, setAttachedFile] = useState(null);
+
+  const handleCopy = async (text, idx) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedIdx(idx);
+      setTimeout(() => setCopiedIdx(prev => (prev === idx ? null : prev)), 1500);
+    } catch {
+      // ক্লিপবোর্ড অ্যাক্সেস না থাকলে নিরবে ফেইল হবে
+    }
+  };
+
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -272,7 +284,7 @@ const NobitaChat = () => {
           ) : (
             <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 12 }}>
               {messages.map((msg, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                   <div
                     style={{
                       maxWidth: '82%',
@@ -291,6 +303,26 @@ const NobitaChat = () => {
                     )}
                     {msg.content}
                   </div>
+                  {msg.role === 'assistant' && (
+                    <button
+                      onClick={() => handleCopy(msg.content, idx)}
+                      aria-label="মেসেজ কপি করুন"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: colors.textMuted,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '2px 15px',
+                        fontSize: 12,
+                      }}
+                    >
+                      {copiedIdx === idx ? <Check size={13} /> : <Copy size={13} />}
+                      {copiedIdx === idx ? 'কপি হয়েছে' : 'কপি'}
+                    </button>
+                  )}
                 </div>
               ))}
               {isLoading && (
@@ -415,4 +447,4 @@ const NobitaChat = () => {
 };
 
 export default NobitaChat;
-    
+      
